@@ -1,9 +1,79 @@
 \section{Methodology}
 
 \subsection{System Overview}
-Our system leverages the PaddleOCR framework to extract structured information from receipt images. The workflow follows a tiered architecture where images are first localized for text regions and then transcribed into digital characters.
+Our receipt OCR system is designed to automatically extract text information from receipt images captured by mobile phone cameras. The system follows a two-stage architecture: image preprocessing and text recognition. Figure \ref{fig:system_architecture} shows the overall flow of the system.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{images/System_Architechture.png}
+\caption{Overall system architecture of the receipt OCR system}
+\label{fig:system_architecture}
+\end{figure}
 
+\subsubsection{System Architecture}
+
+The system consists of three main components:
+
+\begin{enumerate}
+\item \textbf{Input Module}: Accepts receipt images in common formats (JPG, PNG) from various sources such as smartphone cameras or document scanners.
+
+\item \textbf{Preprocessing Module}: Cleans and enhances the input images through a series of image processing techniques. This module is crucial because raw receipt photos often have issues like blur, poor lighting, and noise that can significantly reduce OCR accuracy.
+
+\item \textbf{OCR Module}: Extracts text from the preprocessed images and outputs the recognized text in a structured format.
+\end{enumerate}
+
+\subsubsection{Processing Pipeline}
+
+The complete processing workflow is implemented in the \texttt{ReceiptOCRPipeline} class and follows these steps:
+
+\begin{enumerate}
+\item \textbf{Image Loading}: The system loads the input receipt image using OpenCV's \texttt{imread()} function.
+
+\item \textbf{Preprocessing}: The image goes through a configurable sequence of preprocessing steps. The default pipeline includes:
+\begin{itemize}
+    \item Grayscale conversion (with blue-ink detection)
+    \item Denoising (bilateral filter)
+    \item Contrast enhancement (CLAHE)
+    \item Adaptive thresholding
+    \item Morphological cleanup
+\end{itemize}
+\end{enumerate}
+
+\subsubsection{Processing Pipeline}
+
+The complete processing workflow is implemented in the \texttt{ReceiptOCRPipeline} class and follows these steps:
+
+\begin{enumerate}
+\item \textbf{Image Loading}: The system loads the input receipt image using OpenCV's \texttt{imread()} function.
+
+\item \textbf{Preprocessing}: The image goes through a configurable sequence of preprocessing steps. The default pipeline includes:
+\begin{itemize}
+    \item Grayscale conversion (with blue-ink detection)
+    \item Denoising (bilateral filter)
+    \item Contrast enhancement (CLAHE)
+    \item Adaptive thresholding
+    \item Morphological cleanup
+\end{itemize}
+
+Each step is applied sequentially, with the output of one step feeding into the next. This modular design allows us to easily add, remove, or reorder preprocessing steps based on the receipt type.
+
+\item \textbf{Text Extraction}: The cleaned binary image is passed to the OCR engine for text recognition.
+
+\item \textbf{Output Generation}: The extracted text is returned as a string, which can be further processed or saved to a file.
+\end{enumerate}
+
+The modular design of our system makes it easy to maintain and extend. Each preprocessing technique is implemented as a separate function in the \texttt{src/preprocessing/} directory, and the OCR engine is wrapped in a dedicated module. This separation of concerns allows us to:
+
+\begin{itemize}
+\item Test individual components independently
+\item Swap between different OCR engines if needed
+\item Customize the preprocessing pipeline for different receipt types
+\item Easily add new preprocessing techniques
+\end{itemize}
+
+The entire pipeline can be configured through a configuration dictionary, allowing users to customize the preprocessing steps and OCR parameters without modifying the source code. This flexibility is important because different types of receipts (thermal vs. printed, color vs. black-and-white) may require different preprocessing strategies for optimal results.
+
+% ===============================================================
 \subsection{Image Processing}
 
 Before we can extract text from receipt images using OCR, we need to clean up and enhance the images first. Receipt photos taken with phones often have problems like poor lighting, blur, noise, and low contrast. Our preprocessing pipeline solves these issues step-by-step to prepare clean images for the OCR engine.
