@@ -1,10 +1,81 @@
 \section{Methodology}
 
 \subsection{System Overview}
-
-\subsection{Image Preprocessing}
+Our system leverages the PaddleOCR framework to extract structured information from receipt images. The workflow follows a tiered architecture where images are first localized for text regions and then transcribed into digital characters.
 
 \subsection{Text Detection}
+\textbf{Purpose:} This component is responsible for locating and generating bounding boxes around text areas, including straight, curved, or rotated text.
+
+\subsubsection{DBNet++ (Differentiable Binarization)}
+\textbf{Overview:} A segmentation-based approach highly effective for locating text regardless of orientation or irregular shapes, utilized as the primary detection module in PP-OCRv5.
+
+\textbf{Architecture (PP-OCRv5):}
+\begin{itemize}
+    \item \textbf{Backbone:} Employs high-performance architectures like \textbf{PP-LCNet} or \textbf{MobileNetV3} specifically optimized for extreme inference speeds on mobile and edge devices, alongside larger networks like \textbf{ResNet-50} for server-side scenarios.
+    \item \textbf{Neck (RSE-FPN):} Uses an advanced \textbf{Feature Pyramid Network (FPN)} with \textbf{RSE-FPN} (Residual Squeeze-and-Excitation FPN) modules to fuse multi-scale features and preserve spatial information.
+    \item \textbf{Detection Head:} Processes output from the Neck through convolutional and de-convolutional layers to generate:
+    \begin{itemize}
+        \item \textbf{Probability map:} Indicates text presence at the pixel level.
+        \item \textbf{Threshold map:} Dynamically calculates binarization thresholds for varied lighting and contrast conditions.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Processing and Optimization:}
+\begin{itemize}
+    \item \textbf{Differentiable Binarization (DB):} Produces a Binary Map to extract sharp, polygon-based text boundaries, optimized using binary cross-entropy (BCE) loss.
+    \item \textbf{Geometric Refinement:} To refine text localization and bounding box predictions, core geometric mechanisms are applied:
+    \begin{itemize}
+        \item \textbf{IoU (Intersection over Union):} Measures the overlap between the predicted box and the ground truth.
+        \item \textbf{NMS (Non-Maximum Suppression):} Removes redundant overlapping detections, retaining only the box with the highest confidence score for each text instance.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{EAST (Efficient and Accurate Scene Text detector)}
+\textbf{Overview:} A U-Net style structure designed for fast and accurate scene text localization, bypassing the need for computationally expensive candidates or word grouping.
+
+\textbf{Architecture:}
+\begin{itemize}
+    \item \textbf{Feature Extractor:} Utilizes a \textbf{VGG16} backbone (with Batch Normalization) to extract multi-level feature maps from the input image.
+    \item \textbf{Feature Merger:} Recovers the spatial resolution of features through non-local merging of top-down and bottom-up layers using bilinear interpolation and concatenation.
+    \item \textbf{Output Layer:} Predicts two branches: a \textbf{Score map} (probability of text presence) and a \textbf{Geometry map} (\textbf{RBOX format} including 4 distance offsets and 1 rotation angle).
+\end{itemize}
+
+\textbf{Processing and Optimization:}
+\begin{itemize}
+    \item \textbf{Joint Loss:} Combines \textbf{Dice Loss} (for score map imbalance) with \textbf{Log-IoU} (for bounding box dimensions) and a \textbf{Cosine Angle Loss} (for rotation angle periodicity).
+    \item \textbf{Restoration and LANMS:} Decodes the RBOX geometry back into 4-point quadrilaterals followed by \textbf{Locality-Aware NMS (LANMS)} to merge neighboring quadrilaterals from the same text instance.
+\end{itemize}
 
 \subsection{Text Recognition}
+\textbf{Purpose:} Converts cropped text regions into digital character strings.
 
+\subsubsection{CRNN (Convolutional Recurrent Neural Network)}
+\textbf{Overview:} A hybrid architecture that combines CNN-based feature extraction with RNN-based sequence modeling.
+
+\textbf{Architecture:}
+\begin{itemize}
+    \item \textbf{Convolutional Stage:} A customized \textbf{VGG16-based extractor} with 7 convolutional blocks. Later MaxPool layers utilize a rectangular kernel and stride of \textbf{$(2, 1)$} instead of $(2, 2)$ to preserve horizontal spatial resolution for character sequences.
+    \item \textbf{Recurrent Stage:} A deep \textbf{Bidirectional LSTM (Bi-LSTM)} with two layers and 256 hidden units to model contextual dependencies between sequential features.
+    \item \textbf{Transcription Layer:} A final linear layer mapping RNN outputs to the target character space.
+\end{itemize}
+
+\textbf{Processing and Optimization:}
+\begin{itemize}
+    \item \textbf{CTC Loss:} Trained using \textbf{Connectionist Temporal Classification} to handle variable-length sequences without requiring precise per-character alignment.
+    \item \textbf{Decoding:} During inference, the model utilizes a \textbf{CTC Greedy Search} algorithm to handle blank tokens and consolidate repeated characters for accurate text reconstruction.
+\end{itemize}
+
+\subsubsection{SVTR (Single Visual Model for Scene Text Recognition)}
+\textbf{Overview:} A specialized transformer-based model for text recognition in PP-OCRv5 that completely replaces Recurrent layers with visual self-attention. To balance high recognition accuracy with low real-world latency, the model adopts an \textbf{SVTR-LCNet} hybrid structure, combining lightweight CNN blocks (PP-LCNet) in the initial stages with SVTR transformer blocks in the final stage.
+
+\textbf{Architecture (PP-OCRv5):}
+\begin{enumerate}
+    \item \textbf{Progressive Overlapping Patch Embedding:} Converts images into "character components" using two consecutive \textbf{$3 \times 3$ convolutional layers (stride 2)} with Batch Normalization, preserving spatial continuity at character edges.
+    \item \textbf{Mixing Blocks:} Interleaves \textbf{Local Mixing} (using a \textbf{$7 \times 11$ sliding window} for stroke morphology) and \textbf{Global Mixing} (capturing inter-character context across the entire image). Local blocks are typically sequenced before Global blocks.
+\end{enumerate}
+
+\textbf{Processing and Optimization:}
+\begin{itemize}
+    \item \textbf{Structural Operators:} Uses \textbf{Merging} operators (\textbf{$3 \times 3$ convolution, stride $(2, 1)$}) to reduce feature map height while preserving width, followed by \textbf{Combining} operators to form a final 1D feature sequence.
+    \item \textbf{Prediction:} Features are decoded via a Fully Connected layer combined with \textbf{CTC loss} to resolve the final character string.
+\end{itemize}
