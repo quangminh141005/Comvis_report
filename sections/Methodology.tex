@@ -3,6 +3,24 @@
 \subsection{System Overview}
 Our system leverages the PaddleOCR framework to extract structured information from receipt images. The workflow follows a tiered architecture where images are first localized for text regions and then transcribed into digital characters.
 
+
+\subsection{Image Processing}
+
+Before we can extract text from receipt images using OCR, we need to clean up and enhance the images first. Receipt photos taken with phones often have problems like poor lighting, blur, noise, and low contrast. Our preprocessing pipeline solves these issues step-by-step to prepare clean images for the OCR engine.
+
+\subsubsection{Converting to Grayscale}
+
+The first step is converting color images to grayscale. However, not all receipts are the same - some use black ink while others use blue ink (common in printed invoices). Regular grayscale conversion doesn't work well for blue-ink receipts because it reduces the contrast between text and background.
+
+To handle this, we first check if a receipt has blue ink by comparing the blue and red color channels. If the average blue intensity is more than 10 units higher than the red intensity, we classify it as a blue-ink receipt.
+
+For blue-ink receipts, we use a special conversion formula that ignores the blue channel and only combines the red and green channels:
+\begin{equation}
+I_{\text{gray}} = 0.5 \times R + 0.5 \times G
+\end{equation}
+
+This gives us better text contrast. For normal black-ink receipts, we just use the standard OpenCV grayscale conversion.
+
 \subsection{Text Detection}
 \textbf{Purpose:} This component is responsible for locating and generating bounding boxes around text areas, including straight, curved, or rotated text.
 
