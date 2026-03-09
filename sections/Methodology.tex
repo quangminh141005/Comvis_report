@@ -4,10 +4,10 @@
 Our receipt OCR system is designed to automatically extract text information from receipt images captured by mobile phone cameras. The system follows a two-stage architecture: image preprocessing and text recognition. Figure \ref{fig:system_architecture} shows the overall flow of the system.
 
 \begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{images/System_Architechture.png}
-\caption{Overall system architecture of the receipt OCR system}
-\label{fig:system_architecture}
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/System_Architechture.png}
+    \caption{Overall system architecture of the receipt OCR system}
+    \label{fig:system_architecture}
 \end{figure}
 
 \subsubsection{System Architecture}
@@ -15,11 +15,11 @@ Our receipt OCR system is designed to automatically extract text information fro
 The system consists of three main components:
 
 \begin{enumerate}
-\item \textbf{Input Module}: Accepts receipt images in common formats (JPG, PNG) from various sources such as smartphone cameras or document scanners.
+    \item \textbf{Input Module}: Accepts receipt images in common formats (JPG, PNG) from various sources such as smartphone cameras or document scanners.
 
-\item \textbf{Preprocessing Module}: Cleans and enhances the input images through a series of image processing techniques. This module is crucial because raw receipt photos often have issues like blur, poor lighting, and noise that can significantly reduce OCR accuracy.
+    \item \textbf{Preprocessing Module}: Cleans and enhances the input images through a series of image processing techniques. This module is crucial because raw receipt photos often have issues like blur, poor lighting, and noise that can significantly reduce OCR accuracy.
 
-\item \textbf{OCR Module}: Extracts text from the preprocessed images and outputs the recognized text in a structured format.
+    \item \textbf{OCR Module}: Extracts text from the preprocessed images and outputs the recognized text in a structured format.
 \end{enumerate}
 
 \subsubsection{Processing Pipeline}
@@ -27,16 +27,16 @@ The system consists of three main components:
 The complete processing workflow is implemented in the \texttt{ReceiptOCRPipeline} class and follows these steps:
 
 \begin{enumerate}
-\item \textbf{Image Loading}: The system loads the input receipt image using OpenCV's \texttt{imread()} function.
+    \item \textbf{Image Loading}: The system loads the input receipt image using OpenCV's \texttt{imread()} function.
 
-\item \textbf{Preprocessing}: The image goes through a configurable sequence of preprocessing steps. The default pipeline includes:
-\begin{itemize}
-    \item Grayscale conversion (with blue-ink detection)
-    \item Denoising (bilateral filter)
-    \item Contrast enhancement (CLAHE)
-    \item Adaptive thresholding
-    \item Morphological cleanup
-\end{itemize}
+    \item \textbf{Preprocessing}: The image goes through a configurable sequence of preprocessing steps. The default pipeline includes:
+          \begin{itemize}
+              \item Grayscale conversion (with blue-ink detection)
+              \item Denoising (bilateral filter)
+              \item Contrast enhancement (CLAHE)
+              \item Adaptive thresholding
+              \item Morphological cleanup
+          \end{itemize}
 \end{enumerate}
 
 \subsubsection{Processing Pipeline}
@@ -44,31 +44,31 @@ The complete processing workflow is implemented in the \texttt{ReceiptOCRPipelin
 The complete processing workflow is implemented in the \texttt{ReceiptOCRPipeline} class and follows these steps:
 
 \begin{enumerate}
-\item \textbf{Image Loading}: The system loads the input receipt image using OpenCV's \texttt{imread()} function.
+    \item \textbf{Image Loading}: The system loads the input receipt image using OpenCV's \texttt{imread()} function.
 
-\item \textbf{Preprocessing}: The image goes through a configurable sequence of preprocessing steps. The default pipeline includes:
-\begin{itemize}
-    \item Grayscale conversion (with blue-ink detection)
-    \item Denoising (bilateral filter)
-    \item Contrast enhancement (CLAHE)
-    \item Adaptive thresholding
-    \item Morphological cleanup
-\end{itemize}
+    \item \textbf{Preprocessing}: The image goes through a configurable sequence of preprocessing steps. The default pipeline includes:
+          \begin{itemize}
+              \item Grayscale conversion (with blue-ink detection)
+              \item Denoising (bilateral filter)
+              \item Contrast enhancement (CLAHE)
+              \item Adaptive thresholding
+              \item Morphological cleanup
+          \end{itemize}
 
-Each step is applied sequentially, with the output of one step feeding into the next. This modular design allows us to easily add, remove, or reorder preprocessing steps based on the receipt type.
+          Each step is applied sequentially, with the output of one step feeding into the next. This modular design allows us to easily add, remove, or reorder preprocessing steps based on the receipt type.
 
-\item \textbf{Text Extraction}: The cleaned binary image is passed to the OCR engine for text recognition.
+    \item \textbf{Text Extraction}: The cleaned binary image is passed to the OCR engine for text recognition.
 
-\item \textbf{Output Generation}: The extracted text is returned as a string, which can be further processed or saved to a file.
+    \item \textbf{Output Generation}: The extracted text is returned as a string, which can be further processed or saved to a file.
 \end{enumerate}
 
 The modular design of our system makes it easy to maintain and extend. Each preprocessing technique is implemented as a separate function in the \texttt{src/preprocessing/} directory, and the OCR engine is wrapped in a dedicated module. This separation of concerns allows us to:
 
 \begin{itemize}
-\item Test individual components independently
-\item Swap between different OCR engines if needed
-\item Customize the preprocessing pipeline for different receipt types
-\item Easily add new preprocessing techniques
+    \item Test individual components independently
+    \item Swap between different OCR engines if needed
+    \item Customize the preprocessing pipeline for different receipt types
+    \item Easily add new preprocessing techniques
 \end{itemize}
 
 The entire pipeline can be configured through a configuration dictionary, allowing users to customize the preprocessing steps and OCR parameters without modifying the source code. This flexibility is important because different types of receipts (thermal vs. printed, color vs. black-and-white) may require different preprocessing strategies for optimal results.
@@ -86,7 +86,7 @@ To handle this, we first check if a receipt has blue ink by comparing the blue a
 
 For blue-ink receipts, we use a special conversion formula that ignores the blue channel and only combines the red and green channels:
 \begin{equation}
-I_{\text{gray}} = 0.5 \times R + 0.5 \times G
+    I_{\text{gray}} = 0.5 \times R + 0.5 \times G
 \end{equation}
 
 This gives us better text contrast. For normal black-ink receipts, we just use the standard OpenCV grayscale conversion.
@@ -107,11 +107,11 @@ For really noisy or low-quality images, we can use this stronger denoising metho
 Phone camera photos can be slightly blurry due to motion or focus issues. To fix this, we apply a sharpening filter using a small $3 \times 3$ kernel:
 
 \begin{equation}
-K_{\text{sharpen}} = \begin{bmatrix}
-0 & -1 & 0 \\
--1 & 5 & -1 \\
-0 & -1 & 0
-\end{bmatrix}
+    K_{\text{sharpen}} = \begin{bmatrix}
+        0  & -1 & 0  \\
+        -1 & 5  & -1 \\
+        0  & -1 & 0
+    \end{bmatrix}
 \end{equation}
 
 This kernel enhances edges and makes text look crisper by making each pixel more distinct from its neighbors.
@@ -138,11 +138,11 @@ For receipts with shadows or uneven lighting, we use adaptive thresholding. Inst
 The final step uses morphological operations to fix small imperfections in the binary image. Thermal receipts especially can have broken or faded characters that need repair:
 
 \begin{itemize}
-\item \textbf{Closing}: This operation fills in small gaps and connects broken parts of letters. It's done by dilating (expanding) then eroding (shrinking) the text. This is useful because thermal printer quality often degrades over time, leaving broken characters.
+    \item \textbf{Closing}: This operation fills in small gaps and connects broken parts of letters. It's done by dilating (expanding) then eroding (shrinking) the text. This is useful because thermal printer quality often degrades over time, leaving broken characters.
 
-\item \textbf{Opening}: This removes small noise specks and dots from the background. It works by eroding first (removing small objects) then dilating back (restoring the important parts).
+    \item \textbf{Opening}: This removes small noise specks and dots from the background. It works by eroding first (removing small objects) then dilating back (restoring the important parts).
 
-\item \textbf{Dilation}: For very faint text, we can optionally thicken the character strokes by expanding them slightly using a 3$\times$3 kernel. This makes thin or faded text easier for the OCR to recognize.
+    \item \textbf{Dilation}: For very faint text, we can optionally thicken the character strokes by expanding them slightly using a 3$\times$3 kernel. This makes thin or faded text easier for the OCR to recognize.
 \end{itemize}
 
 We use small kernels (1$\times$1 or 2$\times$2 pixels) to avoid accidentally merging separate characters together.
@@ -161,20 +161,20 @@ By the end of this preprocessing pipeline, we transform messy phone photos into 
     \item \textbf{Backbone:} Employs high-performance architectures like \textbf{PP-LCNet} or \textbf{MobileNetV3} specifically optimized for extreme inference speeds on mobile and edge devices, alongside larger networks like \textbf{ResNet-50} for server-side scenarios.
     \item \textbf{Neck (RSE-FPN):} Uses an advanced \textbf{Feature Pyramid Network (FPN)} with \textbf{RSE-FPN} (Residual Squeeze-and-Excitation FPN) modules to fuse multi-scale features and preserve spatial information.
     \item \textbf{Detection Head:} Processes output from the Neck through convolutional and de-convolutional layers to generate:
-    \begin{itemize}
-        \item \textbf{Probability map:} Indicates text presence at the pixel level.
-        \item \textbf{Threshold map:} Dynamically calculates binarization thresholds for varied lighting and contrast conditions.
-    \end{itemize}
+          \begin{itemize}
+              \item \textbf{Probability map:} Indicates text presence at the pixel level.
+              \item \textbf{Threshold map:} Dynamically calculates binarization thresholds for varied lighting and contrast conditions.
+          \end{itemize}
 \end{itemize}
 
 \textbf{Processing and Optimization:}
 \begin{itemize}
     \item \textbf{Differentiable Binarization (DB):} Produces a Binary Map to extract sharp, polygon-based text boundaries, optimized using binary cross-entropy (BCE) loss.
     \item \textbf{Geometric Refinement:} To refine text localization and bounding box predictions, core geometric mechanisms are applied:
-    \begin{itemize}
-        \item \textbf{IoU (Intersection over Union):} Measures the overlap between the predicted box and the ground truth.
-        \item \textbf{NMS (Non-Maximum Suppression):} Removes redundant overlapping detections, retaining only the box with the highest confidence score for each text instance.
-    \end{itemize}
+          \begin{itemize}
+              \item \textbf{IoU (Intersection over Union):} Measures the overlap between the predicted box and the ground truth.
+              \item \textbf{NMS (Non-Maximum Suppression):} Removes redundant overlapping detections, retaining only the box with the highest confidence score for each text instance.
+          \end{itemize}
 \end{itemize}
 
 \subsubsection{EAST (Efficient and Accurate Scene Text detector)}
@@ -226,3 +226,21 @@ By the end of this preprocessing pipeline, we transform messy phone photos into 
     \item \textbf{Structural Operators:} Uses \textbf{Merging} operators (\textbf{$3 \times 3$ convolution, stride $(2, 1)$}) to reduce feature map height while preserving width, followed by \textbf{Combining} operators to form a final 1D feature sequence.
     \item \textbf{Prediction:} Features are decoded via a Fully Connected layer combined with \textbf{CTC loss} to resolve the final character string.
 \end{itemize}
+
+\subsection{Text detection}
+\textbf{PP-OCRv4}
+\vspace{0.5cm}
+
+\noindent Text detection is performed using the detection module of the PP-OCRv4 framework, which is based on a Differentiable Binarization (DB) architecture for scene text detection. The model first extracts multi-scale visual features from the input image using a convolutional backbone.
+\vspace{0.5cm}
+
+\noindent The network predicts a probability map indicating the possibility of text pixels. A differentiable binarization mechanism then converts this map into a binary segmentation map using an adaptive threshold, allowing the model to produce sharper and more accurate text boundaries. After binarization, connected components are extracted and converted into quadrilateral bounding boxes representing individual text regions. Low-confidence detections are filtered during post-processing. The output of this stage is a set of bounding boxes that localize text areas in the image.
+
+\subsection{Text recognition}
+\textbf{PP-OCRv4}
+\vspace{0.5cm}
+
+\noindent Text recognition is performed using the recognition module of PP-OCRv4. Each detected text region is cropped and resized before being passed into the recognition network. A convolutional feature extractor is used to transform the image into a sequential feature representation that preserves the spatial structure of the text.
+\vspace{0.5cm}
+
+\noindent The sequential features are then processed by a sequence modeling module that captures contextual relationships between characters. Finally, the predicted character probabilities are decoded using a Connectionist Temporal Classification (CTC) decoder to produce the final text string without requiring explicit character segmentation. The output consists of the recognized text and an associated confidence score for each detected text region.
