@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+This project presented a receipt OCR pipeline combining image preprocessing with the
+PP-OCRv4 framework, evaluated on the ICDAR 2019 SROIE dataset. The preprocessing module
+effectively addressed common receipt degradations such as noise, poor contrast, and faded
+ink, while the detection model achieved a strong precision of 93.83\% and F1-score of
+91.62\%. At the recognition stage, the system reached a character-level accuracy of
+87.96\%, with most remaining errors stemming from visually similar characters such as
+\texttt{O/0} and \texttt{S/5}.
+
+The gap between character and word-level accuracy reflects the inherent difficulty of
+full-line transcription on real-world receipts, and points toward future improvements
+such as attention-based decoders and post-processing correction layers. Overall, the
+results demonstrate that combining classical preprocessing techniques with modern deep
+learning produces a practical and effective system for automated receipt understanding.

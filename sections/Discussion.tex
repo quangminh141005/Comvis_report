@@ -2,8 +2,81 @@
 
 \subsection{Performance Analysis}
 
+Overall, the proposed receipt OCR pipeline demonstrates strong performance across both text
+detection and recognition stages. The detection model achieves a precision of 93.83\% and an
+F1-score of 91.62\%, indicating that the system reliably localizes text regions in scanned
+receipt images with minimal false positives. The IoU distribution further confirms this, with
+the majority of predictions falling in the 0.75--0.90 range, reflecting tight and accurate
+bounding box alignment with ground truth annotations.
+
+At the recognition stage, the model achieves a character-level accuracy of 87.96\% (CER of
+12.04\%), which is a reasonable result given the inherent challenges of receipt imagery.
+However, the relatively high WER of 64.89\% and line accuracy of 63.99\% reveal that while
+individual characters are often correctly recognized, complete word and line-level transcription
+remains difficult. This gap between character-level and word-level accuracy is expected in OCR
+systems: a single character error within a word is sufficient to mark the entire word as
+incorrect, making WER a considerably stricter metric than CER.
+
+The preprocessing pipeline contributes meaningfully to these results by addressing common
+receipt image degradations prior to detection and recognition. Techniques such as CLAHE for
+contrast enhancement, bilateral filtering for noise reduction, and adaptive thresholding for
+binarization collectively improve the clarity of text regions, particularly in thermal receipts
+with faded ink or photos taken under uneven lighting. The blue-ink detection mechanism also
+adds robustness by adjusting the grayscale conversion for invoices that use colored ink, which
+standard conversion would otherwise handle poorly.
+
+The most frequent character-level errors such as \texttt{O → 0}, \texttt{S → 5}, and
+\texttt{0 → 1} are consistent with patterns commonly observed in receipt OCR literature.
+These confusions arise because receipts frequently mix alphanumeric characters in close
+proximity (e.g., product codes, prices, and invoice numbers), and the small font sizes typical
+of thermal printing reduce the visual distinction between similar-looking glyphs.
 
 \subsection{Limitations}
 
+Despite the encouraging results, several limitations are worth acknowledging. First, the
+recognition performance degrades noticeably on receipts with low print quality, heavy noise, or
+significant skew that preprocessing alone cannot fully correct. While the preprocessing pipeline
+handles many common degradation types, extreme cases such as severely creased receipts or
+heavily faded thermal paper remain challenging.
+
+Second, the system's recognition accuracy is sensitive to font size and character density.
+Receipts that contain small-font footnotes, tightly packed item descriptions, or multi-column
+layouts can cause the detection model to either merge adjacent text regions into a single
+bounding box or split a single word across multiple boxes, both of which propagate errors into
+the recognition stage.
+
+Third, although the SROIE dataset is a well-established benchmark, it consists predominantly
+of Malaysian retail receipts. This limits the generalizability of the trained model to other
+receipt formats, languages, or regions. Receipts from different countries often follow
+different structural conventions, use different character sets, or include non-Latin scripts
+that the current model was not trained to handle.
+
+Finally, the current pipeline treats detection and recognition as two independent sequential
+stages. Errors made during detection such as a misaligned or missing bounding box, they cannot
+be recovered at the recognition stage, meaning early-stage failures have a compounding effect
+on the final output quality.
 
 \subsection{Future Improvements}
+
+Several directions could meaningfully improve the system in future work. On the preprocessing
+side, incorporating learning-based image restoration models such as deblurring or
+super-resolution networks could better handle low-quality inputs that rule-based preprocessing
+struggles with. Automatic skew correction using Hough transform-based deskewing or a learned
+document rectification network would also reduce a common source of detection errors.
+
+For text detection, experimenting with alternative architectures beyond DBNet++ and EAST
+such as PAN++ or TextBPN could improve recall on densely packed or irregularly shaped
+text regions. Incorporating end-to-end trainable detection-recognition frameworks, where
+both stages are jointly optimized, would eliminate the error propagation bottleneck inherent
+in the current two-stage design.
+
+On the recognition side, replacing or augmenting the CTC decoder with an attention-based
+sequence decoder could improve performance on ambiguous characters by leveraging broader
+contextual information. Additionally, fine-tuning the recognition model on a more diverse
+receipt dataset that spans multiple languages, countries, and printing technologies would
+significantly improve generalizability.
+
+Finally, integrating a post-processing step such as a language model or dictionary-based
+correction layer could resolve common character confusions like \texttt{O/0} and
+\texttt{S/5} by leveraging semantic context, for example knowing that a price field should
+contain digits rather than letters.
