@@ -21,6 +21,65 @@ I_{\text{gray}} = 0.5 \times R + 0.5 \times G
 
 This gives us better text contrast. For normal black-ink receipts, we just use the standard OpenCV grayscale conversion.
 
+\subsubsection{Removing Noise}
+
+Receipt images, especially from phone cameras, often have noise (random specks and grain) that can confuse the OCR. We use two different denoising methods:
+
+\paragraph{Bilateral Filter}
+This is our main denoising method. It smooths out noise while keeping text edges sharp - which is exactly what we need. Unlike a simple blur that makes everything fuzzy, the bilateral filter is smart enough to blur noise but preserve important edges like text strokes. We set the filter diameter to 9 pixels and use strength values of 75 for both color and space parameters.
+
+\paragraph{Non-Local Means (NLM) Denoising}
+For really noisy or low-quality images, we can use this stronger denoising method. It works by finding similar patterns throughout the image and using them to reduce noise. We adjust the filter strength ($h$) between 5-10 for normal images and 10-20 for very noisy ones.
+
+
+\subsubsection{Sharpening}
+
+Phone camera photos can be slightly blurry due to motion or focus issues. To fix this, we apply a sharpening filter using a small $3 \times 3$ kernel:
+
+\begin{equation}
+K_{\text{sharpen}} = \begin{bmatrix}
+0 & -1 & 0 \\
+-1 & 5 & -1 \\
+0 & -1 & 0
+\end{bmatrix}
+\end{equation}
+
+This kernel enhances edges and makes text look crisper by making each pixel more distinct from its neighbors.
+
+\subsubsection{Improving Contrast}
+
+Many receipt photos have poor lighting - either too dark, too bright, or uneven lighting across the image. We use a technique called CLAHE (Contrast Limited Adaptive Histogram Equalization) to fix this.
+
+CLAHE works by dividing the image into small tiles (8$\times$8 pixels) and improving the contrast in each tile separately. This is better than adjusting the whole image at once because different parts of the receipt might need different adjustments. We set the clip limit to 2.0 to prevent the algorithm from amplifying noise too much. This technique works especially well for faded thermal receipts.
+
+\subsubsection{Converting to Black and White (Binarization)}
+
+OCR works best with pure black text on a white background, so we need to convert our grayscale image to binary (only black and white pixels, no gray). We use two methods depending on the image quality:
+
+\paragraph{Otsu's Method}
+This technique automatically finds the best threshold value to separate text from background. It analyzes the image histogram and picks the threshold that gives the cleanest separation. This works great for receipts with even lighting.
+
+\paragraph{Adaptive Thresholding}
+For receipts with shadows or uneven lighting, we use adaptive thresholding. Instead of using one threshold for the whole image, this method calculates a different threshold for each small region (31$\times$31 pixel blocks). Each pixel is compared to the average of its neighborhood minus a constant value ($C=10$). This adapts to local lighting changes and handles tricky lighting situations much better.
+
+
+\subsubsection{Cleaning Up with Morphology}
+
+The final step uses morphological operations to fix small imperfections in the binary image. Thermal receipts especially can have broken or faded characters that need repair:
+
+\begin{itemize}
+\item \textbf{Closing}: This operation fills in small gaps and connects broken parts of letters. It's done by dilating (expanding) then eroding (shrinking) the text. This is useful because thermal printer quality often degrades over time, leaving broken characters.
+
+\item \textbf{Opening}: This removes small noise specks and dots from the background. It works by eroding first (removing small objects) then dilating back (restoring the important parts).
+
+\item \textbf{Dilation}: For very faint text, we can optionally thicken the character strokes by expanding them slightly using a 3$\times$3 kernel. This makes thin or faded text easier for the OCR to recognize.
+\end{itemize}
+
+We use small kernels (1$\times$1 or 2$\times$2 pixels) to avoid accidentally merging separate characters together.
+
+By the end of this preprocessing pipeline, we transform messy phone photos into clean, high-contrast black-and-white images that are perfect for OCR processing. Each step addresses a specific problem commonly found in receipt images, and together they significantly improve text recognition accuracy.
+
+% ================================================
 \subsection{Text Detection}
 \textbf{Purpose:} This component is responsible for locating and generating bounding boxes around text areas, including straight, curved, or rotated text.
 
