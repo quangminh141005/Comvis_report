@@ -151,12 +151,14 @@ By the end of this preprocessing pipeline, we transform messy phone photos into 
 
 % ================================================
 \subsection{Text Detection}
-\textbf{Purpose:} This component is responsible for locating and generating bounding boxes around text areas, including straight, curved, or rotated text.
+\textbf{Purpose:} This component is responsible for locating and generating bounding boxes around text areas, including straight, curved, or rotated text. In this project, we utilize the detection module of the \textbf{PP-OCRv4} framework.
+
+\noindent The detection process starts by extracting multi-scale visual features from the input image using a convolutional backbone. The network then predicts a probability map indicating text presence, which is converted into a binary segmentation map via a differentiable binarization mechanism. This allows the model to produce accurate text boundaries even in complex layouts.
 
 \subsubsection{DBNet++ (Differentiable Binarization)}
-\textbf{Overview:} A segmentation-based approach highly effective for locating text regardless of orientation or irregular shapes, utilized as the primary detection module in PP-OCRv5.
+\textbf{Overview:} A segmentation-based approach highly effective for locating text regardless of orientation or irregular shapes, utilized as the primary detection module in PP-OCRv4.
 
-\textbf{Architecture (PP-OCRv5):}
+\textbf{Architecture (PP-OCRv4):}
 \begin{itemize}
     \item \textbf{Backbone:} Employs high-performance architectures like \textbf{PP-LCNet} or \textbf{MobileNetV3} specifically optimized for extreme inference speeds on mobile and edge devices, alongside larger networks like \textbf{ResNet-50} for server-side scenarios.
     \item \textbf{Neck (RSE-FPN):} Uses an advanced \textbf{Feature Pyramid Network (FPN)} with \textbf{RSE-FPN} (Residual Squeeze-and-Excitation FPN) modules to fuse multi-scale features and preserve spatial information.
@@ -194,7 +196,9 @@ By the end of this preprocessing pipeline, we transform messy phone photos into 
 \end{itemize}
 
 \subsection{Text Recognition}
-\textbf{Purpose:} Converts cropped text regions into digital character strings.
+\textbf{Purpose:} Converts cropped text regions into digital character strings. Our system implements the recognition module of \textbf{PP-OCRv4}.
+
+\noindent Each detected text region is cropped and resized before being passed into the recognition network. A convolutional feature extractor transforms the image into a sequential representation that preserves spatial structure. These features are then processed to capture contextual relationships, and characters are decoded using a Connectionist Temporal Classification (CTC) decoder to produce the final text string and associated confidence scores.
 
 \subsubsection{CRNN (Convolutional Recurrent Neural Network)}
 \textbf{Overview:} A hybrid architecture that combines CNN-based feature extraction with RNN-based sequence modeling.
@@ -213,9 +217,9 @@ By the end of this preprocessing pipeline, we transform messy phone photos into 
 \end{itemize}
 
 \subsubsection{SVTR (Single Visual Model for Scene Text Recognition)}
-\textbf{Overview:} A specialized transformer-based model for text recognition in PP-OCRv5 that completely replaces Recurrent layers with visual self-attention. To balance high recognition accuracy with low real-world latency, the model adopts an \textbf{SVTR-LCNet} hybrid structure, combining lightweight CNN blocks (PP-LCNet) in the initial stages with SVTR transformer blocks in the final stage.
+\textbf{Overview:} A specialized transformer-based model for text recognition in PP-OCRv4 that completely replaces Recurrent layers with visual self-attention. To balance high recognition accuracy with low real-world latency, the model adopts an \textbf{SVTR-LCNet} hybrid structure, combining lightweight CNN blocks (PP-LCNet) in the initial stages with SVTR transformer blocks in the final stage.
 
-\textbf{Architecture (PP-OCRv5):}
+\textbf{Architecture (PP-OCRv4):}
 \begin{enumerate}
     \item \textbf{Progressive Overlapping Patch Embedding:} Converts images into "character components" using two consecutive \textbf{$3 \times 3$ convolutional layers (stride 2)} with Batch Normalization, preserving spatial continuity at character edges.
     \item \textbf{Mixing Blocks:} Interleaves \textbf{Local Mixing} (using a \textbf{$7 \times 11$ sliding window} for stroke morphology) and \textbf{Global Mixing} (capturing inter-character context across the entire image). Local blocks are typically sequenced before Global blocks.
@@ -227,20 +231,3 @@ By the end of this preprocessing pipeline, we transform messy phone photos into 
     \item \textbf{Prediction:} Features are decoded via a Fully Connected layer combined with \textbf{CTC loss} to resolve the final character string.
 \end{itemize}
 
-\subsection{Text detection}
-\textbf{PP-OCRv4}
-\vspace{0.5cm}
-
-\noindent Text detection is performed using the detection module of the PP-OCRv4 framework, which is based on a Differentiable Binarization (DB) architecture for scene text detection. The model first extracts multi-scale visual features from the input image using a convolutional backbone.
-\vspace{0.5cm}
-
-\noindent The network predicts a probability map indicating the possibility of text pixels. A differentiable binarization mechanism then converts this map into a binary segmentation map using an adaptive threshold, allowing the model to produce sharper and more accurate text boundaries. After binarization, connected components are extracted and converted into quadrilateral bounding boxes representing individual text regions. Low-confidence detections are filtered during post-processing. The output of this stage is a set of bounding boxes that localize text areas in the image.
-
-\subsection{Text recognition}
-\textbf{PP-OCRv4}
-\vspace{0.5cm}
-
-\noindent Text recognition is performed using the recognition module of PP-OCRv4. Each detected text region is cropped and resized before being passed into the recognition network. A convolutional feature extractor is used to transform the image into a sequential feature representation that preserves the spatial structure of the text.
-\vspace{0.5cm}
-
-\noindent The sequential features are then processed by a sequence modeling module that captures contextual relationships between characters. Finally, the predicted character probabilities are decoded using a Connectionist Temporal Classification (CTC) decoder to produce the final text string without requiring explicit character segmentation. The output consists of the recognized text and an associated confidence score for each detected text region.
