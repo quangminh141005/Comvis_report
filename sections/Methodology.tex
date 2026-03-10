@@ -179,42 +179,12 @@ By the end of this preprocessing pipeline, we transform messy phone photos into 
           \end{itemize}
 \end{itemize}
 
-\subsubsection{EAST (Efficient and Accurate Scene Text detector)}
-\textbf{Overview:} A U-Net style structure designed for fast and accurate scene text localization, bypassing the need for computationally expensive candidates or word grouping.
-
-\textbf{Architecture:}
-\begin{itemize}
-    \item \textbf{Feature Extractor:} Utilizes a \textbf{VGG16} backbone (with Batch Normalization) to extract multi-level feature maps from the input image.
-    \item \textbf{Feature Merger:} Recovers the spatial resolution of features through non-local merging of top-down and bottom-up layers using bilinear interpolation and concatenation.
-    \item \textbf{Output Layer:} Predicts two branches: a \textbf{Score map} (probability of text presence) and a \textbf{Geometry map} (\textbf{RBOX format} including 4 distance offsets and 1 rotation angle).
-\end{itemize}
-
-\textbf{Processing and Optimization:}
-\begin{itemize}
-    \item \textbf{Joint Loss:} Combines \textbf{Dice Loss} (for score map imbalance) with \textbf{Log-IoU} (for bounding box dimensions) and a \textbf{Cosine Angle Loss} (for rotation angle periodicity).
-    \item \textbf{Restoration and LANMS:} Decodes the RBOX geometry back into 4-point quadrilaterals followed by \textbf{Locality-Aware NMS (LANMS)} to merge neighboring quadrilaterals from the same text instance.
-\end{itemize}
 
 \subsection{Text Recognition}
 \textbf{Purpose:} Converts cropped text regions into digital character strings. Our system implements the recognition module of \textbf{PP-OCRv4}.
 
 \noindent Each detected text region is cropped and resized before being passed into the recognition network. A convolutional feature extractor transforms the image into a sequential representation that preserves spatial structure. These features are then processed to capture contextual relationships, and characters are decoded using a Connectionist Temporal Classification (CTC) decoder to produce the final text string and associated confidence scores.
 
-\subsubsection{CRNN (Convolutional Recurrent Neural Network)}
-\textbf{Overview:} A hybrid architecture that combines CNN-based feature extraction with RNN-based sequence modeling.
-
-\textbf{Architecture:}
-\begin{itemize}
-    \item \textbf{Convolutional Stage:} A customized \textbf{VGG16-based extractor} with 7 convolutional blocks. Later MaxPool layers utilize a rectangular kernel and stride of \textbf{$(2, 1)$} instead of $(2, 2)$ to preserve horizontal spatial resolution for character sequences.
-    \item \textbf{Recurrent Stage:} A deep \textbf{Bidirectional LSTM (Bi-LSTM)} with two layers and 256 hidden units to model contextual dependencies between sequential features.
-    \item \textbf{Transcription Layer:} A final linear layer mapping RNN outputs to the target character space.
-\end{itemize}
-
-\textbf{Processing and Optimization:}
-\begin{itemize}
-    \item \textbf{CTC Loss:} Trained using \textbf{Connectionist Temporal Classification} to handle variable-length sequences without requiring precise per-character alignment.
-    \item \textbf{Decoding:} During inference, the model utilizes a \textbf{CTC Greedy Search} algorithm to handle blank tokens and consolidate repeated characters for accurate text reconstruction.
-\end{itemize}
 
 \subsubsection{SVTR (Single Visual Model for Scene Text Recognition)}
 \textbf{Overview:} A specialized transformer-based model for text recognition in PP-OCRv4 that completely replaces Recurrent layers with visual self-attention. To balance high recognition accuracy with low real-world latency, the model adopts an \textbf{SVTR-LCNet} hybrid structure, combining lightweight CNN blocks (PP-LCNet) in the initial stages with SVTR transformer blocks in the final stage.
